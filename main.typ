@@ -66,14 +66,12 @@
   #pagebreak()
   ```rust
   impl<T> ConstVec<T> {
-    pub const fn new() -> Self {
-        Self {
-            memory: unsafe {
-              MaybeUninit::uninit().assume_init()
-            },
-            len: 0,
-        }
-     }
+      pub const fn new() -> Self {
+          Self {
+              memory: [const { MaybeUninit::uninit() }; MAX_SIZE],
+              len: 0,
+          }
+      }
   }
   ```
   #pagebreak()
