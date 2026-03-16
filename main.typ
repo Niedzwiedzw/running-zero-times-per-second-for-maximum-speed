@@ -68,12 +68,16 @@
   impl<T> ConstVec<T> {
       pub const fn new() -> Self {
           Self {
-              memory: [const { MaybeUninit::uninit() }; MAX_SIZE],
+              memory: [
+                  const { MaybeUninit::uninit() };
+                  MAX_SIZE
+              ],
               len: 0,
           }
       }
   }
   ```
+
   #pagebreak()
   ```rust
   impl<T> ConstVec<T> {
