@@ -21,9 +21,11 @@
             tinymist
             typst
             typstyle
+            iosevka
           ];
 
           shellHook = ''
+            export TYPST_FONT_PATHS="${pkgs.iosevka}/share/fonts"
             echo "Typst presentation environment ready"
             echo "Run 'typst compile main.typ' to build PDF"
             echo "Run 'typst watch main.typ' for live preview"

@@ -32,9 +32,10 @@
   #v(0.5cm)
 
   #link("https://github.com/Niedzwiedzw")[github.com/Niedzwiedzw] \
-  #link("mailto:wojciech.brozek@niedzwiedz.it")[wojciech.brozek\@niedzwiedz.it]
+  #link("mailto:wojciech.brozek@niedzwiedz.it")[wojciech.brozek\@niedzwiedz.it] \
+  #link("https://exein.io")[exein.io]
 
-  #v(0.5cm)
-
-  #link("https://exein.io")[exein.io] - Rust + Security = \<3
+  ```rust
+  trait Exein: Rust + Security {}
+  ```
 ]
