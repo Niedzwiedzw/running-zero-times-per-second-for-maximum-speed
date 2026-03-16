@@ -10,12 +10,12 @@ pub(crate) struct ConstVec<T> {
 impl<T> ConstVec<T> {
     pub const fn new() -> Self {
         Self {
-            memory: unsafe { MaybeUninit::uninit().assume_init() },
+            memory: [const { MaybeUninit::uninit() }; MAX_SIZE],
             len: 0,
         }
     }
 
-    pub const fn push(self, value: T) -> Self {
+    const fn push(self, value: T) -> Self {
         let mut memory = self.memory;
         memory[self.len] = MaybeUninit::new(value);
         Self {
@@ -24,14 +24,22 @@ impl<T> ConstVec<T> {
         }
     }
 
-    pub const fn as_ref(&self) -> &[T] {
-        unsafe { &*(self.memory.split_at(self.len).0 as *const [MaybeUninit<T>] as *const [T]) }
+    const fn as_ref(&self) -> &[T] {
+        unsafe {
+            // SAFETY: Only the first `self.len` elements are accessed, all initialized via push().
+            //         MaybeUninit<T> has the same size, alignment, and ABI as T.
+            //         The returned reference lifetime is tied to &self, preventing use-after-free.
+            &*(self.memory.split_at(self.len).0 as *const [MaybeUninit<T>] as *const [T])
+        }
     }
 }
 
 impl ConstVec<u8> {
     pub const fn as_str(&'static self) -> &'static str {
-        unsafe { std::str::from_utf8_unchecked(self.as_ref()) }
+        unsafe {
+            // SAFETY: Bytes are added via push_str() which takes &str - guaranteed valid UTF-8.
+            std::str::from_utf8_unchecked(self.as_ref())
+        }
     }
     pub const fn push_str(self, string: &'static str) -> Self {
         let mut this = self;
