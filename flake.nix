@@ -6,17 +6,21 @@
     flake-utils.url = "github:numtide/flake-utils";
   };
 
-  outputs = { self, nixpkgs, flake-utils }:
-    flake-utils.lib.eachDefaultSystem (system:
-      let
+  outputs = {
+    self,
+    nixpkgs,
+    flake-utils,
+  }:
+    flake-utils.lib.eachDefaultSystem (
+      system: let
         pkgs = nixpkgs.legacyPackages.${system};
-      in
-      {
+      in {
         devShells.default = pkgs.mkShell {
           buildInputs = with pkgs; [
             typst
-            typst-lsp
-            typst-fmt
+            tinymist
+            typst
+            typstyle
           ];
 
           shellHook = ''
@@ -29,7 +33,7 @@
         packages.default = pkgs.stdenv.mkDerivation {
           name = "rustikon-2026-slides";
           src = ./.;
-          buildInputs = [ pkgs.typst ];
+          buildInputs = [pkgs.typst];
           buildPhase = ''
             typst compile main.typ slides.pdf
           '';

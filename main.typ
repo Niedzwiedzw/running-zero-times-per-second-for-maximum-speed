@@ -13,7 +13,7 @@
 
 #set text(
   fill: white,
-  font: "Inter",
+  font: "Iosevka",
   size: 14pt
 )
 
