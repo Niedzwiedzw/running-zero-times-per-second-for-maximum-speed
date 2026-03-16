@@ -5,7 +5,7 @@
 // Slide 1: Title
 #align(center + horizon)[
   #text(size: 24pt, weight: "bold")[
-    Running code 0 times / second for maximum performance
+    Running 0 times per second for maximum speed
   ]
 
   #v(2cm)
