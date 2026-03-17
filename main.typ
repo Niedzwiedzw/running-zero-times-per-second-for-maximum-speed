@@ -121,6 +121,7 @@
   #pagebreak()
   ```rust
   impl ConstVec<u8> {
+      // We can build strings at compile time!
       pub const fn as_str(&'static self) -> &'static str {
           unsafe {
               std::str::from_utf8_unchecked(self.as_ref())
@@ -128,7 +129,6 @@
       }
   }
 
-  // We can build strings at compile time
   ```
   #pagebreak()
   HTML builder... in Rust's type system?
@@ -145,7 +145,7 @@
     pub trait IsAttribute {
         const ATTRIBUTE_BYTES: ConstVec<u8>;
         const ATTRIBUTE: &'static str;
-    // }
+    }
 
     pub trait IsChild {
         const CHILD_BYTES: ConstVec<u8>;
@@ -218,7 +218,7 @@
     }
   ```
 
-  #pagebreak()
+    #pagebreak()
     ```rust
     impl<const TAG: &'static str, A, C> DomTree<TAG, A, C>
     where
@@ -233,4 +233,7 @@
         }
 
     ```
+
+    #pagebreak()
+    *LIVE DEMO!*
 ]
