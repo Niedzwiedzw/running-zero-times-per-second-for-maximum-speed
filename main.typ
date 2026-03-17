@@ -166,7 +166,7 @@
   ```
   #pagebreak()
   ```rust
-  /// For example: "background: black"
+  /// For example: `style="background: black"`
   pub struct Attribute<
       const K: &'static str,
       const V: &'static str,
