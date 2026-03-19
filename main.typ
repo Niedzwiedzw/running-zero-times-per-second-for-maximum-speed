@@ -2,169 +2,163 @@
 
 #show: rustikon
 
-// Slide 1: Title
-#align(center + horizon)[
-  #text(size: 24pt, weight: "bold")[
-    Running 0 times per second for maximum speed
+#set align(center + horizon);
+
+#title[
+  Running 0 times per second for maximum speed
+]
+
+#v(2cm)
+
+#text(size: 18pt)[Wojciech Brożek]
+
+#let slide(body, size: 13pt) = {
+  set text(size: size)
+  [
+    #pagebreak()
+    #body
   ]
-
-  #v(2cm)
-
-  #text(size: 18pt)[Wojciech Brożek]
+}
 
 
-  #pagebreak()
-  // Slide 2: introduction
+#slide()[
   #link("https://github.com/Niedzwiedzw")[github.com/Niedzwiedzw] \
   #link(
     "mailto:wojciech.brozek@niedzwiedz.it",
   )[wojciech.brozek\@niedzwiedz.it] \
-  #link("https://exein.io")[exein.io]
 
   ```rust
+  /// `https://exein.io`
   trait Exein: Rust + Security {}
   ```
-  // Slide 3: Problem
-  #pagebreak()
+]
+
+#slide()[
   60FPS
 
-  #pagebreak()
+]
+
+#slide()[
   60FPS (\~16ms per frame)
+]
 
-  // Slide 4: Solution
-  #pagebreak()
+// Slide 4: Solution
+#slide()[
   *Solution: doing less at runtime!*
+]
 
-  #pagebreak()
+#slide()[
   *Solution: doing less at runtime!* \
   _(some nightly features)_
+]
 
-  #pagebreak()
+#slide()[
   *Solution: doing less at runtime!* \
   _(some nightly features)_ \
   _(some unsafe code)_
+]
 
-  // Slide 5: Part 1 - constvec
-  #pagebreak()
+#slide()[
+  *Joining _&'static str_-ings at runtime.*
+]
+#slide()[
+  *Joining _&'static str_-ings at runtime.* \
+  `concat!("a", "b")`: only accepts literals (not very flexible)
+]
+
+// Slide 5: Part 1 - constvec
+#slide()[
   ```rust
-  /// we need a way to push/pop inside `const {}` blocks
-  struct ConstVec<T> {
+  /// build a &'static str inside `const {}`
+  ///
+  /// implementation:
+  /// `github.com/Niedzwiedzw/`
+  struct ConstStr {
       // ..
   }
   ```
-  #pagebreak()
-  ```rust
-  const MAX_SIZE: usize = 2usize.pow(13);
+]
 
-  /// we need a way to push/pop inside `const {}` blocks
-  pub struct ConstVec<T> {
-      memory: [MaybeUninit<T>; MAX_SIZE],
-      len: usize,
-  }
-  ```
-
-  #pagebreak()
+#slide(size: 11pt)[
   ```rust
-  impl<T> ConstVec<T> {
-      pub const fn new() -> Self {
-          Self {
-              memory: [
-                  const { MaybeUninit::uninit() };
-                  MAX_SIZE
-              ],
-              len: 0,
-          }
-      }
-  }
-  ```
-
-  #pagebreak()
-  ```rust
-  impl<T> ConstVec<T> {
-      pub const fn push(self, value: T) -> Self {
-          let mut memory = self.memory;
-          memory[self.len] = MaybeUninit::new(value);
-          Self { memory, len: self.len + 1 }
-      }
-  }
-  ```
-  #pagebreak()
-  ```rust
-  impl<T> ConstVec<T> {
-      pub const fn as_ref(&self) -> &[T] {
-          unsafe {
-              &*(
-                  self.memory.split_at(self.len).0
-                  as *const [MaybeUninit<T>]
-                  as *const [T]
-              )
-          }
-      }
-  }
-  ```
-
-  #pagebreak()
-  ```rust
-  impl ConstVec<u8> {
-      pub const fn push_str(self, s: &'static str) -> Self {
-          let mut this = self;
-          let mut extend = s.as_bytes();
-          while let [next, tail @ ..] = extend {
-              this = this.push(*next);
-              extend = tail;
-          }
-          this
-      }
-  }
-  ```
-
-  #pagebreak()
-  ```rust
-  impl ConstVec<u8> {
-      // We can build strings at compile time!
-      pub const fn as_str(&'static self) -> &'static str {
-          unsafe {
-              std::str::from_utf8_unchecked(self.as_ref())
-          }
-      }
+  impl ConstStr {
+      /// Initialize in `const {}`
+      pub const fn new() -> Self {}
+      /// push strings in `const {}`
+      pub const fn push_str(self, string: &'static str) -> Self {}
+      /// safely cast to `&'static str` in `const {}`
+      pub const fn as_str(&'static self) -> &'static str {}
   }
 
   ```
-  #pagebreak()
-  HTML builder... in Rust's type system?
+]
 
-  #pagebreak()
+#slide()[
+  HTML builder... in Rust's type system!
+]
+
+#slide(size: 10pt)[
+  ```rust
+  // The dream - this Rust code...
+  el("main")
+    .attribute("id", "rustikon")
+    .child(
+      el("form")
+        .child(
+          el("input")
+            .attribute("value", "hello Rustikon 2026!")
+        )
+    )
+  ```
+  ```html
+  <!-- ...produces this html - at compile time -->
+  <main id="rustikon">
+    <form>
+      <input value="hello Rustikon 2026"></input>
+    </form>
+  </main>
+  ```
+]
+
+
+#slide()[
   ```rust
   // ./src/lib.rs
   // + #![feature(adt_const_params)]
   // + #![feature(unsized_const_params)]
   ```
+]
 
-  #pagebreak()
+#slide()[
   ```rust
+    // Notice: no methods...
     pub trait IsAttribute {
-        const ATTRIBUTE_BYTES: ConstVec<u8>;
+        const ATTRIBUTE_BYTES: ConstStr;
         const ATTRIBUTE: &'static str;
     }
 
+    // ...just slots to store &'static str-s
     pub trait IsChild {
-        const CHILD_BYTES: ConstVec<u8>;
+        const CHILD_BYTES: ConstStr;
         const CHILD: &'static str;
     }
   ```
+]
 
-  #pagebreak()
+#slide()[
   ```rust
     pub trait IsChildren {
-        const CHILDREN_BYTES: ConstVec<u8>;
+        const CHILDREN_BYTES: ConstStr;
         const CHILDREN: &'static str;
     }
     pub trait IsAttributes {
-        const ATTRIBUTES_BYTES: ConstVec<u8>;
+        const ATTRIBUTES_BYTES: ConstStr;
         const ATTRIBUTES: &'static str;
     }
   ```
-  #pagebreak()
+]
+
+#slide()[
   ```rust
   /// For example: `style="background: black"`
   pub struct Attribute<
@@ -172,20 +166,23 @@
       const V: &'static str,
   >;
   ```
+]
 
-  #pagebreak()
+#slide()[
   ```rust
     impl<const K: &'static str, const V: &'static str>
         IsAttribute for Attribute<K, V> {
-        const ATTRIBUTE_BYTES: ConstVec<u8> = const {
-            ConstVec::new()
+        const ATTRIBUTE_BYTES: ConstStr = const {
+            ConstStr::new()
                 .push_str(K).push_str(r#"=""#)
                 .push_str(V).push_str(r#"""#)
         };
         // ...
     }
   ```
-  #pagebreak()
+]
+
+#slide()[
   ```rust
     impl<const K: &'static str, const V: &'static str>
         IsAttribute for Attribute<K, V> {
@@ -195,9 +192,10 @@
         };
     }
   ```
+]
 
+#slide()[
   // push attribute
-  #pagebreak()
   ```rust
     pub struct PushAttribute<
         T: IsAttributes,
@@ -205,35 +203,39 @@
     >(PhantomData<(T, Attribute)>);
 
   ```
-  #pagebreak()
+]
+
+#slide()[
   ```rust
     impl<T: IsAttributes, A: IsAttribute>
         IsAttributes for PushAttribute<T, A> {
-        const ATTRIBUTES_BYTES: ConstVec<u8> = const {
-            ConstVec::new()
+        const ATTRIBUTES_BYTES: ConstStr = const {
+            ConstStr::new()
                 .push_str(T::ATTRIBUTES)
                 .push_str(" ")
                 .push_str(A::ATTRIBUTE)
         };
     }
   ```
+]
 
-    #pagebreak()
-    ```rust
-    impl<const TAG: &'static str, A, C> DomTree<TAG, A, C>
-    where
-        A: IsAttributes + 'static,
-        C: IsChildren + 'static,
-    {
-        pub const fn child<Child: IsChild + 'static>(
-            self,
-            _child: Finished<Child>,
-        ) -> DomTree<T, Attributes, PushChild<C, Child>> {
-            DomTree::new()
-        }
+#slide()[
+  ```rust
+  impl<const TAG: &'static str, A, C> DomTree<TAG, A, C>
+  where
+      A: IsAttributes + 'static,
+      C: IsChildren + 'static,
+  {
+      pub const fn child<Child: IsChild + 'static>(
+          self,
+          _child: Finished<Child>,
+      ) -> DomTree<T, Attributes, PushChild<C, Child>> {
+          DomTree::new()
+      }
 
-    ```
+  ```
+]
 
-    #pagebreak()
-    *LIVE DEMO!*
+#slide()[
+  *LIVE DEMO!*
 ]

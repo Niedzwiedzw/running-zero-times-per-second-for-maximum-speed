@@ -4,17 +4,18 @@
 
 use crate::type_system_html_builder::{DomTree, Empty};
 
+pub mod const_str;
 pub mod const_vec;
 pub mod type_system_html_builder;
 
 type Element<const TAG: &'static str> = DomTree<TAG, Empty, Empty>;
 
-fn el<const TAG: &'static str>() -> Element<TAG> {
+const fn el<const TAG: &'static str>() -> Element<TAG> {
     Element::new()
 }
 
-fn main() {
-    let webpage = el::<"main">()
+const fn build_webpage() -> &'static str {
+    let tree = el::<"main">()
         .attribute::<"style", "width: 100dvw; height: 100dvh; background: black; color: white">()
         .child(
             el::<"nav">()
@@ -78,6 +79,10 @@ fn main() {
                 )
                 .finish(),
         );
-    let html: &'static str = webpage.to_html();
-    println!("{html}")
+
+    tree.to_html()
+}
+
+fn main() {
+    println!("{}", build_webpage())
 }

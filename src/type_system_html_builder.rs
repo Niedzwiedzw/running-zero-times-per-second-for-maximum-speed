@@ -4,36 +4,36 @@
 
 use std::marker::PhantomData;
 
-use crate::const_vec::ConstVec;
+use crate::const_str::ConstStr;
 
 pub trait IsAttribute {
-    const ATTRIBUTE_BYTES: ConstVec<u8>;
+    const ATTRIBUTE_BYTES: ConstStr;
     const ATTRIBUTE: &'static str;
 }
 
 pub trait IsChild {
-    const CHILD_BYTES: ConstVec<u8>;
+    const CHILD_BYTES: ConstStr;
     const CHILD: &'static str;
 }
 
 pub trait IsChildren {
-    const CHILDREN_BYTES: ConstVec<u8>;
+    const CHILDREN_BYTES: ConstStr;
     const CHILDREN: &'static str;
 }
 pub trait IsAttributes {
-    const ATTRIBUTES_BYTES: ConstVec<u8>;
+    const ATTRIBUTES_BYTES: ConstStr;
     const ATTRIBUTES: &'static str;
 }
 
 pub struct Empty;
 
 impl IsChildren for Empty {
-    const CHILDREN_BYTES: ConstVec<u8> = ConstVec::new();
+    const CHILDREN_BYTES: ConstStr = ConstStr::new();
     const CHILDREN: &'static str = "";
 }
 
 impl IsAttributes for Empty {
-    const ATTRIBUTES_BYTES: ConstVec<u8> = ConstVec::new();
+    const ATTRIBUTES_BYTES: ConstStr = ConstStr::new();
     const ATTRIBUTES: &'static str = "";
 }
 
@@ -66,8 +66,8 @@ where
     Attributes: IsAttributes + 'static,
     Children: IsChildren + 'static,
 {
-    const CHILD_BYTES: ConstVec<u8> = const {
-        ConstVec::new()
+    const CHILD_BYTES: ConstStr = const {
+        ConstStr::new()
             .push_str("<")
             .push_str(T)
             .push_str(Attributes::ATTRIBUTES)
@@ -83,23 +83,23 @@ where
 pub struct TextElement<const V: &'static str>;
 
 impl<const T: &'static str> IsChild for TextElement<T> {
-    const CHILD_BYTES: ConstVec<u8> = ConstVec::new();
+    const CHILD_BYTES: ConstStr = ConstStr::new();
     const CHILD: &'static str = T;
 }
 
 pub struct PushChild<T, C>(PhantomData<T>, PhantomData<C>);
 
 impl<T: IsChildren, C: IsChild> IsChildren for PushChild<T, C> {
-    const CHILDREN_BYTES: ConstVec<u8> =
-        const { ConstVec::new().push_str(T::CHILDREN).push_str(C::CHILD) };
+    const CHILDREN_BYTES: ConstStr =
+        const { ConstStr::new().push_str(T::CHILDREN).push_str(C::CHILD) };
     const CHILDREN: &'static str = const { Self::CHILDREN_BYTES.as_str() };
 }
 
 pub struct Attribute<const K: &'static str, const V: &'static str>;
 
 impl<const K: &'static str, const V: &'static str> IsAttribute for Attribute<K, V> {
-    const ATTRIBUTE_BYTES: ConstVec<u8> = const {
-        ConstVec::new()
+    const ATTRIBUTE_BYTES: ConstStr = const {
+        ConstStr::new()
             .push_str(K)
             .push_str(r#"=""#)
             .push_str(V)
@@ -111,8 +111,8 @@ impl<const K: &'static str, const V: &'static str> IsAttribute for Attribute<K, 
 pub struct PushAttribute<T: IsAttributes, Attribute: IsAttribute>(PhantomData<(T, Attribute)>);
 
 impl<T: IsAttributes, A: IsAttribute> IsAttributes for PushAttribute<T, A> {
-    const ATTRIBUTES_BYTES: ConstVec<u8> = const {
-        ConstVec::new()
+    const ATTRIBUTES_BYTES: ConstStr = const {
+        ConstStr::new()
             .push_str(T::ATTRIBUTES)
             .push_str(" ")
             .push_str(A::ATTRIBUTE)

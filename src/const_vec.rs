@@ -15,7 +15,7 @@ impl<T> ConstVec<T> {
         }
     }
 
-    const fn push(self, value: T) -> Self {
+    pub const fn push(self, value: T) -> Self {
         let mut memory = self.memory;
         memory[self.len] = MaybeUninit::new(value);
         Self {
@@ -24,30 +24,25 @@ impl<T> ConstVec<T> {
         }
     }
 
-    const fn as_ref(&self) -> &[T] {
-        unsafe {
-            // SAFETY: Only the first `self.len` elements are accessed, all initialized via push().
-            //         MaybeUninit<T> has the same size, alignment, and ABI as T.
-            //         The returned reference lifetime is tied to &self, preventing use-after-free.
-            &*(self.memory.split_at(self.len).0 as *const [MaybeUninit<T>] as *const [T])
-        }
-    }
-}
-
-impl ConstVec<u8> {
-    pub const fn as_str(&'static self) -> &'static str {
-        unsafe {
-            // SAFETY: Bytes are added via push_str() which takes &str - guaranteed valid UTF-8.
-            std::str::from_utf8_unchecked(self.as_ref())
-        }
-    }
-    pub const fn push_str(self, string: &'static str) -> Self {
+    pub const fn extend(self, slice: &'static [T]) -> Self
+    where
+        T: Copy,
+    {
         let mut this = self;
-        let mut extend = string.as_bytes();
+        let mut extend = slice;
         while let [next, tail @ ..] = extend {
             this = this.push(*next);
             extend = tail;
         }
         this
+    }
+
+    pub const fn as_ref<'a>(&'a self) -> &'a [T] {
+        unsafe {
+            // SAFETY: Only the first `self.len`-th elements are accessed, all initialized via push().
+            //         MaybeUninit<T> has the same size and alignment as T.
+            //         The returned reference lifetime is tied to &self.
+            &*(self.memory.split_at(self.len).0 as *const [MaybeUninit<T>] as *const [T])
+        }
     }
 }

@@ -35,6 +35,9 @@
             # html stuff
             prettier
             nodePackages.vscode-langservers-extracted
+
+            # readme
+            mdcat
           ];
 
           shellHook = ''
