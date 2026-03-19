@@ -18,10 +18,7 @@ impl<T> ConstVec<T> {
     pub const fn push(self, value: T) -> Self {
         let mut memory = self.memory;
         memory[self.len] = MaybeUninit::new(value);
-        Self {
-            memory,
-            len: self.len + 1,
-        }
+        Self { memory, len: self.len + 1 }
     }
 
     pub const fn extend(self, slice: &'static [T]) -> Self
@@ -37,7 +34,7 @@ impl<T> ConstVec<T> {
         this
     }
 
-    pub const fn as_ref<'a>(&'a self) -> &'a [T] {
+    pub const fn as_ref(&self) -> &[T] {
         unsafe {
             // SAFETY: Only the first `self.len`-th elements are accessed, all initialized via push().
             //         MaybeUninit<T> has the same size and alignment as T.

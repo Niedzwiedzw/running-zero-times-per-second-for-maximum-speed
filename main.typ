@@ -35,7 +35,6 @@
 
 #slide()[
   60FPS
-
 ]
 
 #slide()[
@@ -133,27 +132,25 @@
   ```rust
     // Notice: no methods...
     pub trait IsAttribute {
-        const ATTRIBUTE_BYTES: ConstStr;
-        const ATTRIBUTE: &'static str;
+        const ATTRIBUTE: ConstStr;
     }
+
 
     // ...just slots to store &'static str-s
     pub trait IsChild {
-        const CHILD_BYTES: ConstStr;
-        const CHILD: &'static str;
+        const CHILD: ConstStr;
     }
+
   ```
 ]
 
 #slide()[
   ```rust
     pub trait IsChildren {
-        const CHILDREN_BYTES: ConstStr;
-        const CHILDREN: &'static str;
+        const CHILDREN: ConstStr;
     }
     pub trait IsAttributes {
-        const ATTRIBUTES_BYTES: ConstStr;
-        const ATTRIBUTES: &'static str;
+        const ATTRIBUTES: ConstStr;
     }
   ```
 ]
@@ -168,54 +165,62 @@
   ```
 ]
 
-#slide()[
+#slide(size: 11pt)[
   ```rust
-    impl<const K: &'static str, const V: &'static str>
-        IsAttribute for Attribute<K, V> {
-        const ATTRIBUTE_BYTES: ConstStr = const {
-            ConstStr::new()
-                .push_str(K).push_str(r#"=""#)
-                .push_str(V).push_str(r#"""#)
-        };
-        // ...
+    impl<
+      const K: &'static str,
+      const V: &'static str,
+    > IsAttribute for Attribute<K, V> {
+        const ATTRIBUTE: ConstStr = ConstStr::new()
+            .push_str(K)
+            .push_str(r#"=""#)
+            .push_str(V)
+            .push_str(r#"""#);
     }
   ```
 ]
 
-#slide()[
+#slide(size: 11pt)[
   ```rust
-    impl<const K: &'static str, const V: &'static str>
-        IsAttribute for Attribute<K, V> {
-        // ...
-        const ATTRIBUTES: &'static str = const {
-            Self::ATTRIBUTES_BYTES.as_str()
-        };
+    pub struct Empty;
+
+    impl IsChildren for Empty {
+        const CHILDREN: ConstStr = ConstStr::new();
+    }
+
+    impl IsAttributes for Empty {
+        const ATTRIBUTES: ConstStr = ConstStr::new();
     }
   ```
 ]
 
-#slide()[
-  // push attribute
+#slide(size: 11pt)[
   ```rust
     pub struct PushAttribute<
         T: IsAttributes,
-        Attribute: IsAttribute,
-    >(PhantomData<(T, Attribute)>);
-
+        A: IsAttribute,
+    >(PhantomData<(T, A)>);
+  
+    impl<
+      T: IsAttributes,
+      A: IsAttribute,
+    > IsAttributes for PushAttribute<T, A> {
+        const ATTRIBUTES: ConstStr = ConstStr::new()
+            .push_str(T::ATTRIBUTES.as_str())
+            .push_str(" ")
+            .push_str(A::ATTRIBUTE.as_str());
+    }
   ```
 ]
-
-#slide()[
+#slide(size: 11pt)[
   ```rust
-    impl<T: IsAttributes, A: IsAttribute>
-        IsAttributes for PushAttribute<T, A> {
-        const ATTRIBUTES_BYTES: ConstStr = const {
-            ConstStr::new()
-                .push_str(T::ATTRIBUTES)
-                .push_str(" ")
-                .push_str(A::ATTRIBUTE)
-        };
-    }
+  pub struct PushChild<T, C>(PhantomData<T>, PhantomData<C>);
+
+  impl<T: IsChildren, C: IsChild> IsChildren for PushChild<T, C> {
+      const CHILDREN: ConstStr = ConstStr::new()
+          .push_str(T::CHILDREN.as_str())
+          .push_str(C::CHILD.as_str());
+  }
   ```
 ]
 

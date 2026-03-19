@@ -2,44 +2,34 @@
 #![allow(private_interfaces)]
 #![allow(clippy::new_without_default)]
 
-use std::marker::PhantomData;
-
-use crate::const_str::ConstStr;
+use {crate::const_str::ConstStr, std::marker::PhantomData};
 
 pub trait IsAttribute {
-    const ATTRIBUTE_BYTES: ConstStr;
-    const ATTRIBUTE: &'static str;
+    const ATTRIBUTE: ConstStr;
 }
 
 pub trait IsChild {
-    const CHILD_BYTES: ConstStr;
-    const CHILD: &'static str;
+    const CHILD: ConstStr;
 }
 
 pub trait IsChildren {
-    const CHILDREN_BYTES: ConstStr;
-    const CHILDREN: &'static str;
+    const CHILDREN: ConstStr;
 }
 pub trait IsAttributes {
-    const ATTRIBUTES_BYTES: ConstStr;
-    const ATTRIBUTES: &'static str;
+    const ATTRIBUTES: ConstStr;
 }
 
 pub struct Empty;
 
 impl IsChildren for Empty {
-    const CHILDREN_BYTES: ConstStr = ConstStr::new();
-    const CHILDREN: &'static str = "";
+    const CHILDREN: ConstStr = ConstStr::new();
 }
 
 impl IsAttributes for Empty {
-    const ATTRIBUTES_BYTES: ConstStr = ConstStr::new();
-    const ATTRIBUTES: &'static str = "";
+    const ATTRIBUTES: ConstStr = ConstStr::new();
 }
 
-pub struct DomTree<const TAG: &'static str, Attributes, Children>(
-    PhantomData<(Children, Attributes)>,
-)
+pub struct DomTree<const TAG: &'static str, Attributes, Children>(PhantomData<(Children, Attributes)>)
 where
     Attributes: IsAttributes,
     Children: IsChildren;
@@ -66,58 +56,48 @@ where
     Attributes: IsAttributes + 'static,
     Children: IsChildren + 'static,
 {
-    const CHILD_BYTES: ConstStr = const {
-        ConstStr::new()
-            .push_str("<")
-            .push_str(T)
-            .push_str(Attributes::ATTRIBUTES)
-            .push_str(">")
-            .push_str(Children::CHILDREN)
-            .push_str("</")
-            .push_str(T)
-            .push_str(">")
-    };
-    const CHILD: &'static str = const { Self::CHILD_BYTES.as_str() };
+    const CHILD: ConstStr = ConstStr::new()
+        .push_str("<")
+        .push_str(T)
+        .push_str(Attributes::ATTRIBUTES.as_str())
+        .push_str(">")
+        .push_str(Children::CHILDREN.as_str())
+        .push_str("</")
+        .push_str(T)
+        .push_str(">");
 }
 
 pub struct TextElement<const V: &'static str>;
 
 impl<const T: &'static str> IsChild for TextElement<T> {
-    const CHILD_BYTES: ConstStr = ConstStr::new();
-    const CHILD: &'static str = T;
+    const CHILD: ConstStr = ConstStr::from_str(T);
 }
 
 pub struct PushChild<T, C>(PhantomData<T>, PhantomData<C>);
 
 impl<T: IsChildren, C: IsChild> IsChildren for PushChild<T, C> {
-    const CHILDREN_BYTES: ConstStr =
-        const { ConstStr::new().push_str(T::CHILDREN).push_str(C::CHILD) };
-    const CHILDREN: &'static str = const { Self::CHILDREN_BYTES.as_str() };
+    const CHILDREN: ConstStr = ConstStr::new()
+        .push_str(T::CHILDREN.as_str())
+        .push_str(C::CHILD.as_str());
 }
 
 pub struct Attribute<const K: &'static str, const V: &'static str>;
 
 impl<const K: &'static str, const V: &'static str> IsAttribute for Attribute<K, V> {
-    const ATTRIBUTE_BYTES: ConstStr = const {
-        ConstStr::new()
-            .push_str(K)
-            .push_str(r#"=""#)
-            .push_str(V)
-            .push_str(r#"""#)
-    };
-    const ATTRIBUTE: &'static str = const { Self::ATTRIBUTE_BYTES.as_str() };
+    const ATTRIBUTE: ConstStr = ConstStr::new()
+        .push_str(K)
+        .push_str(r#"=""#)
+        .push_str(V)
+        .push_str(r#"""#);
 }
 
 pub struct PushAttribute<T: IsAttributes, Attribute: IsAttribute>(PhantomData<(T, Attribute)>);
 
 impl<T: IsAttributes, A: IsAttribute> IsAttributes for PushAttribute<T, A> {
-    const ATTRIBUTES_BYTES: ConstStr = const {
-        ConstStr::new()
-            .push_str(T::ATTRIBUTES)
-            .push_str(" ")
-            .push_str(A::ATTRIBUTE)
-    };
-    const ATTRIBUTES: &'static str = const { Self::ATTRIBUTES_BYTES.as_str() };
+    const ATTRIBUTES: ConstStr = ConstStr::new()
+        .push_str(T::ATTRIBUTES.as_str())
+        .push_str(" ")
+        .push_str(A::ATTRIBUTE.as_str());
 }
 
 pub type EmptyElement<const TAG_NAME: &'static str> = DomTree<TAG_NAME, Empty, Empty>;
@@ -139,22 +119,15 @@ where
     Attributes: IsAttributes + 'static,
     Children: IsChildren + 'static,
 {
-    pub const fn child<Child: IsChild + 'static>(
-        self,
-        _child: Finished<Child>,
-    ) -> DomTree<TAG, Attributes, PushChild<Children, Child>> {
+    pub const fn child<Child: IsChild + 'static>(self, _child: Finished<Child>) -> DomTree<TAG, Attributes, PushChild<Children, Child>> {
         DomTree::new()
     }
 
-    pub const fn text<const V: &'static str>(
-        self,
-    ) -> DomTree<TAG, Attributes, PushChild<Children, TextElement<V>>> {
+    pub const fn text<const V: &'static str>(self) -> DomTree<TAG, Attributes, PushChild<Children, TextElement<V>>> {
         DomTree::new()
     }
 
-    pub const fn attribute<const K: &'static str, const V: &'static str>(
-        self,
-    ) -> DomTree<TAG, PushAttribute<Attributes, Attribute<K, V>>, Children> {
+    pub const fn attribute<const K: &'static str, const V: &'static str>(self) -> DomTree<TAG, PushAttribute<Attributes, Attribute<K, V>>, Children> {
         DomTree::new()
     }
 
@@ -163,6 +136,6 @@ where
     }
 
     pub const fn to_html(self) -> &'static str {
-        Self::CHILD
+        Self::CHILD.as_str()
     }
 }

@@ -5,14 +5,9 @@ pub struct ConstStr {
 }
 
 impl ConstStr {
-    #[expect(
-        clippy::new_without_default,
-        reason = "it is quite large, allocating it should be more explicit"
-    )]
+    #[expect(clippy::new_without_default, reason = "it is quite large, allocating it should be more explicit")]
     pub const fn new() -> Self {
-        Self {
-            inner: ConstVec::new(),
-        }
+        Self { inner: ConstVec::new() }
     }
     pub const fn as_str(&'static self) -> &'static str {
         unsafe {
@@ -24,5 +19,8 @@ impl ConstStr {
         Self {
             inner: self.inner.extend(string.as_bytes()),
         }
+    }
+    pub const fn from_str(string: &'static str) -> Self {
+        Self::new().push_str(string)
     }
 }
