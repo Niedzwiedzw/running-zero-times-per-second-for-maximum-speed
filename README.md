@@ -12,3 +12,7 @@ cargo build
 strings ./target/debug/rustikon-2026 | rg Wojciech
 strings ./target/debug/rustikon-2026 | rg Wojciech > index.html && firefox ./index.html
 ```
+
+### recording:
+
+https://www.youtube.com/watch?v=lyiqI9-n34c
